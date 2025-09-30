@@ -1,0 +1,71 @@
+MIT License
+
+Copyright (c) 2024 MCP Jichitai Basic Information Server Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## データのライセンス / Data License
+
+このプロジェクトで使用されている総務省のデータは、以下のライセンスに基づいて提供されています：
+
+The data from the Ministry of Internal Affairs and Communications (MIC) used in
+this project is provided under the following license:
+
+### 出典 / Attribution
+
+- 出典：総務省「住民基本台帳に基づく人口、人口動態及び世帯数」
+  Source: Ministry of Internal Affairs and Communications,
+  "Population and Households Based on Resident Registry"
+  https://www.soumu.go.jp/main_sosiki/jichi_gyousei/daityo/jinkou_jinkoudoutai-setaisuu.html
+
+- 出典：総務省「市町村別決算状況調」
+  Source: Ministry of Internal Affairs and Communications,
+  "Municipal Financial Settlement Survey"
+  https://www.soumu.go.jp/iken/kessan_jokyo_2.html
+
+- 出典：総務省「全国地方公共団体コード」
+  Source: Ministry of Internal Affairs and Communications,
+  "National Local Government Codes"
+  https://www.soumu.go.jp/denshijiti/code.html
+
+### ライセンス / License
+
+総務省のデータは「クリエイティブ・コモンズ・ライセンス 表示 4.0 国際（CC BY 4.0）」
+と互換性のある利用ルールが適用されています。
+
+The MIC data is provided under terms compatible with the
+Creative Commons Attribution 4.0 International (CC BY 4.0) license.
+
+詳細は各データの公式ページをご確認ください。
+For details, please refer to the official pages for each dataset.
+
+### 注意事項 / Notes
+
+- データの正確性について総務省は保証していません
+  The Ministry does not guarantee the accuracy of the data
+
+- データを利用した結果について総務省は責任を負いません
+  The Ministry is not responsible for any consequences arising from data usage
+
+- このプロジェクトのソフトウェア部分はMITライセンスですが、データ部分は
+  総務省の利用規約に従います
+  While the software portion of this project is under MIT License,
+  the data portion is subject to MIC's terms of use
