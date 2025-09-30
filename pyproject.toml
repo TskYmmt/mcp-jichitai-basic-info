@@ -1,0 +1,22 @@
+[project]
+name = "jichitai-basic-information-server"
+version = "0.1.0"
+description = "MCP Server for Japanese municipality basic information (population, finance, codes)"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=0.9.0",
+    "openpyxl>=3.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_backend"
+
+[tool.setuptools.packages.find]
+where = ["src"]

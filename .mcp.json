@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "jichitai-basic-information": {
+      "command": "/Users/tskymmt/mcp/jichitai-basic-information-server/venv/bin/python3",
+      "args": [
+        "-m",
+        "src.server"
+      ],
+      "env": {
+        "PYTHONPATH": "/Users/tskymmt/mcp/jichitai-basic-information-server"
+      }
+    }
+  }
+}
