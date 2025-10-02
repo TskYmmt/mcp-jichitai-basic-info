@@ -111,6 +111,53 @@ async def list_tools() -> list[Tool]:
                 },
             },
         ),
+        Tool(
+            name="get_mynumber_card_rate",
+            description="Get My Number Card issuance rate for a Japanese municipality",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "jichitai_code": {
+                        "type": "string",
+                        "description": "6-digit municipality code (e.g., '142018' for Yokosuka)",
+                    },
+                    "jichitai_name": {
+                        "type": "string",
+                        "description": "Municipality name (e.g., '横須賀市', '矢巾町')",
+                    },
+                    "prefecture": {
+                        "type": "string",
+                        "description": "Prefecture name for disambiguation (e.g., '神奈川県', '岩手県')",
+                    },
+                },
+            },
+        ),
+        Tool(
+            name="get_digital_agency_dx_data",
+            description="Get Digital Agency DX Dashboard data for a Japanese municipality (DX indicators, online procedures)",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "jichitai_code": {
+                        "type": "string",
+                        "description": "6-digit municipality code (e.g., '142018' for Yokosuka)",
+                    },
+                    "jichitai_name": {
+                        "type": "string",
+                        "description": "Municipality name (e.g., '横須賀市')",
+                    },
+                    "prefecture": {
+                        "type": "string",
+                        "description": "Prefecture name for disambiguation (e.g., '神奈川県')",
+                    },
+                    "data_category": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "List of data categories to retrieve (optional, returns all if not specified)",
+                    },
+                },
+            },
+        ),
     ]
 
 
@@ -173,6 +220,48 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
         )
 
         return [TextContent(type="text", text=json.dumps(result, ensure_ascii=False, indent=2))]
+
+    elif name == "get_mynumber_card_rate":
+        jichitai_code = arguments.get("jichitai_code")
+        jichitai_name = arguments.get("jichitai_name")
+        prefecture = arguments.get("prefecture")
+
+        result = data_manager.get_mynumber_card_rate(
+            jichitai_code=jichitai_code,
+            jichitai_name=jichitai_name,
+            prefecture=prefecture
+        )
+
+        if result:
+            return [TextContent(type="text", text=json.dumps(result, ensure_ascii=False, indent=2))]
+        else:
+            return [TextContent(type="text", text=json.dumps({
+                "error": "My Number Card data not found",
+                "jichitai_code": jichitai_code,
+                "jichitai_name": jichitai_name
+            }, ensure_ascii=False))]
+
+    elif name == "get_digital_agency_dx_data":
+        jichitai_code = arguments.get("jichitai_code")
+        jichitai_name = arguments.get("jichitai_name")
+        prefecture = arguments.get("prefecture")
+        data_category = arguments.get("data_category")
+
+        result = data_manager.get_digital_agency_dx_data(
+            jichitai_code=jichitai_code,
+            jichitai_name=jichitai_name,
+            prefecture=prefecture,
+            data_category=data_category
+        )
+
+        if result:
+            return [TextContent(type="text", text=json.dumps(result, ensure_ascii=False, indent=2))]
+        else:
+            return [TextContent(type="text", text=json.dumps({
+                "error": "DX data not found",
+                "jichitai_code": jichitai_code,
+                "jichitai_name": jichitai_name
+            }, ensure_ascii=False))]
 
     else:
         return [TextContent(type="text", text=f"Unknown tool: {name}")]

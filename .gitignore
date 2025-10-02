@@ -54,8 +54,15 @@ data/source/population/*.xlsx
 data/source/population/*.xls
 data/source/finance/*.xlsx
 data/source/codes/*.xlsx
+data/source/mynumber/*.xlsx
+data/source/dx_dashboard/*.zip
+data/source/dx_dashboard/extracted/*.xlsx
+data/source/dx_dashboard/extracted/*.csv
+data/source/dx_dashboard/extracted/*.txt
 
 # Keep directory structure
 !data/source/population/.gitkeep
 !data/source/finance/.gitkeep
 !data/source/codes/.gitkeep
+!data/source/mynumber/.gitkeep
+!data/source/dx_dashboard/.gitkeep

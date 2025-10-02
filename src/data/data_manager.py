@@ -4,6 +4,8 @@ from pathlib import Path
 from .population_parser import PopulationParser
 from .finance_parser import FinanceParser
 from .codes_parser import CodesParser
+from .mynumber_parser import MyNumberParser
+from .dx_parser import DXParser
 
 
 class DataManager:
@@ -20,6 +22,8 @@ class DataManager:
         self.population_parser = None
         self.finance_parser = None
         self.codes_parser = None
+        self.mynumber_parser = None
+        self.dx_parser = None
 
         # Initialize parsers
         self._init_parsers()
@@ -40,6 +44,17 @@ class DataManager:
         codes_file = self.data_dir / "codes" / "municipal_codes_2019.xlsx"
         if codes_file.exists():
             self.codes_parser = CodesParser(str(codes_file))
+
+        # My Number Card parser
+        mynumber_file = self.data_dir / "mynumber" / "mynumber_card_rate.xlsx"
+        if mynumber_file.exists():
+            self.mynumber_parser = MyNumberParser(str(mynumber_file))
+
+        # DX Dashboard parser
+        dx_comparison_file = self.data_dir / "dx_dashboard" / "extracted" / "市区町村毎のDX進捗状況_市区町村比較.xlsx"
+        dx_online_file = self.data_dir / "dx_dashboard" / "extracted" / "市区町村毎のDX進捗状況_行政手続のオンライン申請率.xlsx"
+        if dx_comparison_file.exists() and dx_online_file.exists():
+            self.dx_parser = DXParser(str(dx_comparison_file), str(dx_online_file))
 
     def get_jichitai_basic_info(
         self,
@@ -238,6 +253,131 @@ class DataManager:
             "filtered_count": len(results)
         }
 
+    def get_mynumber_card_rate(
+        self,
+        jichitai_code: Optional[str] = None,
+        jichitai_name: Optional[str] = None,
+        prefecture: Optional[str] = None
+    ) -> Optional[Dict]:
+        """
+        Get My Number Card issuance rate for a municipality
+
+        Args:
+            jichitai_code: 6-digit municipality code
+            jichitai_name: Municipality name
+            prefecture: Prefecture name (optional, for disambiguation)
+
+        Returns:
+            Dictionary with My Number Card data
+        """
+        if not self.mynumber_parser:
+            return None
+
+        # Find municipality by code or name
+        target_name = None
+        target_prefecture = None
+
+        if jichitai_code:
+            # Get municipality name from codes
+            code_data = self.codes_parser.get_by_code(jichitai_code) if self.codes_parser else None
+            if not code_data:
+                return None
+            target_name = code_data.get("municipality")
+            target_prefecture = code_data.get("prefecture")
+        elif jichitai_name:
+            target_name = jichitai_name
+            target_prefecture = prefecture
+
+        if not target_name:
+            return None
+
+        # Get My Number Card data
+        mynumber_data = self.mynumber_parser.get_by_name(target_name, target_prefecture)
+        if not mynumber_data:
+            return None
+
+        # Get jichitai_code if we don't have it
+        if not jichitai_code and self.codes_parser:
+            matches = self.codes_parser.get_by_name(target_name, target_prefecture)
+            if matches:
+                jichitai_code = matches[0].get("jichitai_code")
+
+        return {
+            "jichitai_code": jichitai_code,
+            "jichitai_name": mynumber_data["municipality"],
+            "prefecture": mynumber_data["prefecture"],
+            "mynumber_card_data": mynumber_data["mynumber_card"],
+            "data_source": {
+                "source_name": "総務省 マイナンバーカード交付状況",
+                "source_url": "https://www.soumu.go.jp/kojinbango_card/kofujokyo.html"
+            }
+        }
+
+    def get_digital_agency_dx_data(
+        self,
+        jichitai_code: Optional[str] = None,
+        jichitai_name: Optional[str] = None,
+        prefecture: Optional[str] = None,
+        data_category: Optional[List[str]] = None
+    ) -> Optional[Dict]:
+        """
+        Get Digital Agency DX Dashboard data for a municipality
+
+        Args:
+            jichitai_code: 6-digit municipality code
+            jichitai_name: Municipality name
+            prefecture: Prefecture name (optional, for disambiguation)
+            data_category: List of data categories to retrieve
+
+        Returns:
+            Dictionary with DX data
+        """
+        if not self.dx_parser:
+            return None
+
+        # Find municipality by code or name
+        target_name = None
+        target_prefecture = None
+
+        if jichitai_code:
+            # Get municipality name from codes
+            code_data = self.codes_parser.get_by_code(jichitai_code) if self.codes_parser else None
+            if not code_data:
+                return None
+            target_name = code_data.get("municipality")
+            target_prefecture = code_data.get("prefecture")
+        elif jichitai_name:
+            target_name = jichitai_name
+            target_prefecture = prefecture
+
+        if not target_name:
+            return None
+
+        # Get DX data
+        dx_data = self.dx_parser.get_by_name(target_name)
+        if not dx_data:
+            return None
+
+        # Get jichitai_code if we don't have it
+        if not jichitai_code and self.codes_parser:
+            matches = self.codes_parser.get_by_name(target_name, target_prefecture)
+            if matches:
+                jichitai_code = matches[0].get("jichitai_code")
+
+        return {
+            "jichitai_code": jichitai_code,
+            "jichitai_name": dx_data["municipality"],
+            "prefecture": target_prefecture,
+            "dx_data": {
+                "dx_indicators": dx_data.get("dx_indicators", {}),
+                "online_procedures": dx_data.get("online_procedures", {})
+            },
+            "data_source": {
+                "source_name": "デジタル庁 自治体DX推進状況ダッシュボード",
+                "source_url": "https://www.digital.go.jp/resources/govdashboard/local-government-dx"
+            }
+        }
+
     def close(self):
         """Close all parsers"""
         if self.population_parser:
@@ -246,3 +386,7 @@ class DataManager:
             self.finance_parser.close()
         if self.codes_parser:
             self.codes_parser.close()
+        if self.mynumber_parser:
+            self.mynumber_parser.close()
+        if self.dx_parser:
+            self.dx_parser.close()
