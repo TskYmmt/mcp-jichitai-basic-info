@@ -6,6 +6,7 @@ from .finance_parser import FinanceParser
 from .codes_parser import CodesParser
 from .mynumber_parser import MyNumberParser
 from .dx_parser import DXParser
+from .age_group_parser import AgeGroupParser
 
 
 class DataManager:
@@ -24,6 +25,7 @@ class DataManager:
         self.codes_parser = None
         self.mynumber_parser = None
         self.dx_parser = None
+        self.age_group_parser = None
 
         # Initialize parsers
         self._init_parsers()
@@ -55,6 +57,11 @@ class DataManager:
         dx_online_file = self.data_dir / "dx_dashboard" / "extracted" / "市区町村毎のDX進捗状況_行政手続のオンライン申請率.xlsx"
         if dx_comparison_file.exists() and dx_online_file.exists():
             self.dx_parser = DXParser(str(dx_comparison_file), str(dx_online_file))
+
+        # Age group population parser
+        age_group_file = self.data_dir / "population" / "age_group_population.xlsx"
+        if age_group_file.exists():
+            self.age_group_parser = AgeGroupParser(str(age_group_file))
 
     def get_jichitai_basic_info(
         self,
@@ -378,6 +385,104 @@ class DataManager:
             }
         }
 
+    def get_age_group_population(
+        self,
+        jichitai_code: Optional[str] = None,
+        jichitai_name: Optional[str] = None,
+        prefecture: Optional[str] = None
+    ) -> Optional[Dict]:
+        """
+        Get age-stratified population data for a municipality
+
+        Args:
+            jichitai_code: 6-digit municipality code
+            jichitai_name: Municipality name
+            prefecture: Prefecture name (optional, for disambiguation)
+
+        Returns:
+            Dictionary with age group population data
+        """
+        if not self.age_group_parser:
+            return None
+
+        # Find municipality by code or name
+        target_code = None
+
+        if jichitai_code:
+            target_code = jichitai_code
+        elif jichitai_name:
+            if not self.codes_parser:
+                return None
+            matches = self.codes_parser.get_by_name(jichitai_name, prefecture)
+            if not matches:
+                return None
+            target_code = matches[0].get("jichitai_code")
+
+        if not target_code:
+            return None
+
+        # Get age group data (3 records: 計, 男, 女)
+        age_data_list = self.age_group_parser.get_by_code(target_code)
+        if not age_data_list:
+            return None
+
+        # Organize data by gender
+        result = {
+            "jichitai_code": target_code,
+            "jichitai_name": age_data_list[0]["municipality"],
+            "prefecture": age_data_list[0]["prefecture"],
+            "age_groups": {},
+            "data_source": {
+                "source_name": "総務省 住民基本台帳 年齢階級別人口（市区町村別）",
+                "source_url": "https://www.soumu.go.jp/menu_news/s-news/01gyosei02_02000389.html",
+                "base_date": "令和7年1月1日"
+            }
+        }
+
+        # Extract data for each gender
+        for record in age_data_list:
+            gender = record["gender"]
+            result["age_groups"][gender] = {
+                "total": record["total"],
+                "breakdown": record["age_groups"]
+            }
+
+        # Calculate additional metrics
+        total_data = result["age_groups"].get("計", {})
+        if total_data and total_data.get("breakdown"):
+            breakdown = total_data["breakdown"]
+            total_pop = total_data.get("total", 0)
+
+            # Calculate age group percentages
+            if total_pop and total_pop > 0:
+                # Youth (0-14): 0-4, 5-9, 10-14
+                youth = sum([
+                    breakdown.get("0-4歳", 0) or 0,
+                    breakdown.get("5-9歳", 0) or 0,
+                    breakdown.get("10-14歳", 0) or 0
+                ])
+                # Working age (15-64)
+                working = sum([
+                    breakdown.get(f"{i}-{i+4}歳", 0) or 0
+                    for i in range(15, 65, 5)
+                ])
+                # Elderly (65+)
+                elderly = sum([
+                    breakdown.get(f"{i}-{i+4}歳", 0) or 0
+                    for i in range(65, 100, 5)
+                ]) + (breakdown.get("100歳以上", 0) or 0)
+
+                result["demographic_summary"] = {
+                    "youth_population": youth,
+                    "youth_ratio": round(youth / total_pop * 100, 2),
+                    "working_age_population": working,
+                    "working_age_ratio": round(working / total_pop * 100, 2),
+                    "elderly_population": elderly,
+                    "elderly_ratio": round(elderly / total_pop * 100, 2)
+                }
+
+        return result
+
     def close(self):
         """Close all parsers"""
         if self.population_parser:
@@ -390,3 +495,5 @@ class DataManager:
             self.mynumber_parser.close()
         if self.dx_parser:
             self.dx_parser.close()
+        if self.age_group_parser:
+            self.age_group_parser.close()

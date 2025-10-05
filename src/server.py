@@ -174,6 +174,30 @@ async def list_tools() -> list[Tool]:
                 },
             },
         ),
+        Tool(
+            name="get_age_group_population",
+            description=(
+                "Get age-stratified population data for a Japanese municipality with demographic analysis. "
+                "Data source: 総務省「住民基本台帳 年齢階級別人口（市区町村別）【総計】」R7.1.1現在, 21年齢階級, 2,275自治体."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "jichitai_code": {
+                        "type": "string",
+                        "description": "6-digit municipality code (e.g., '142018' for Yokosuka)",
+                    },
+                    "jichitai_name": {
+                        "type": "string",
+                        "description": "Municipality name (e.g., '横須賀市')",
+                    },
+                    "prefecture": {
+                        "type": "string",
+                        "description": "Prefecture name for disambiguation (e.g., '神奈川県')",
+                    },
+                },
+            },
+        ),
     ]
 
 
@@ -275,6 +299,26 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
         else:
             return [TextContent(type="text", text=json.dumps({
                 "error": "DX data not found",
+                "jichitai_code": jichitai_code,
+                "jichitai_name": jichitai_name
+            }, ensure_ascii=False))]
+
+    elif name == "get_age_group_population":
+        jichitai_code = arguments.get("jichitai_code")
+        jichitai_name = arguments.get("jichitai_name")
+        prefecture = arguments.get("prefecture")
+
+        result = data_manager.get_age_group_population(
+            jichitai_code=jichitai_code,
+            jichitai_name=jichitai_name,
+            prefecture=prefecture
+        )
+
+        if result:
+            return [TextContent(type="text", text=json.dumps(result, ensure_ascii=False, indent=2))]
+        else:
+            return [TextContent(type="text", text=json.dumps({
+                "error": "Age group population data not found",
                 "jichitai_code": jichitai_code,
                 "jichitai_name": jichitai_name
             }, ensure_ascii=False))]
