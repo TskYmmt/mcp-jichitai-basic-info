@@ -66,17 +66,23 @@ class FinanceParser:
             revenue_total = ws.cell(row_idx, 40).value
             expenditure_total = ws.cell(row_idx, 41).value
 
+            # Helper to convert "-" to None
+            def normalize_value(val):
+                if val == "-" or val == "－":
+                    return None
+                return val
+
             record = {
                 "jichitai_code": str(jichitai_code).zfill(6),
                 "municipality_name": municipality_name,
                 "population": population,
                 "finance": {
-                    "standard_fiscal_scale": standard_fiscal_scale,  # 標準財政規模 (千円)
-                    "real_balance_ratio": real_balance_ratio,  # 実質収支比率 (%)
-                    "current_balance_ratio": current_balance_ratio,  # 経常収支比率 (%)
-                    "financial_capability_index": financial_capability_index,  # 財政力指数
-                    "revenue_total": revenue_total,  # 歳入総額 (千円)
-                    "expenditure_total": expenditure_total,  # 歳出総額 (千円)
+                    "standard_fiscal_scale": normalize_value(standard_fiscal_scale),  # 標準財政規模 (千円)
+                    "real_balance_ratio": normalize_value(real_balance_ratio),  # 実質収支比率 (%)
+                    "current_balance_ratio": normalize_value(current_balance_ratio),  # 経常収支比率 (%)
+                    "financial_capability_index": normalize_value(financial_capability_index),  # 財政力指数
+                    "revenue_total": normalize_value(revenue_total),  # 歳入総額 (千円)
+                    "expenditure_total": normalize_value(expenditure_total),  # 歳出総額 (千円)
                 }
             }
 

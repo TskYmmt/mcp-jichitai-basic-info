@@ -117,13 +117,16 @@ class DataManager:
                     "population_source": "令和6年1月1日住民基本台帳",
                 }
 
-        # Add finance data
+        # Add finance data (always include field, even if null)
+        result["finance"] = None
+        if "data_sources" not in result:
+            result["data_sources"] = {}
+        result["data_sources"]["finance_source"] = None
+
         if self.finance_parser:
             finance_data = self.finance_parser.get_by_code(code)
             if finance_data:
                 result["finance"] = finance_data.get("finance")
-                if "data_sources" not in result:
-                    result["data_sources"] = {}
                 result["data_sources"]["finance_source"] = "令和5年度市町村別決算状況調"
 
         return result
