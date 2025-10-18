@@ -486,6 +486,156 @@ class DataManager:
 
         return result
 
+    def export_all_municipalities_to_csv(self, output_path: str) -> Dict:
+        """
+        Export all municipalities data to CSV file
+
+        Args:
+            output_path: Path to save the CSV file
+
+        Returns:
+            Dictionary with export status and count
+        """
+        import csv
+
+        if not self.codes_parser:
+            return {"success": False, "error": "Codes parser not available"}
+
+        # Get all municipality codes
+        all_codes = self.codes_parser.parse()
+
+        # Prepare CSV rows
+        rows = []
+        headers = [
+            "jichitai_code", "jichitai_name", "prefecture", "jichitai_type",
+            "population_total", "population_male", "population_female", "households",
+            "financial_capability_index", "current_balance_ratio",
+            "real_debt_service_ratio", "future_burden_ratio", "laspeyres_index",
+            "mynumber_card_issuance_rate",
+            "youth_ratio", "working_age_ratio", "elderly_ratio"
+        ]
+
+        for code_data in all_codes:
+            code = code_data["jichitai_code"]
+
+            # Get basic info
+            row = {
+                "jichitai_code": code,
+                "jichitai_name": code_data.get("municipality", ""),
+                "prefecture": code_data.get("prefecture", ""),
+                "jichitai_type": code_data.get("jichitai_type", ""),
+            }
+
+            # Get population data
+            if self.population_parser:
+                pop_data = self.population_parser.get_by_code(code)
+                if pop_data and pop_data.get("population"):
+                    pop = pop_data["population"]
+                    row["population_total"] = pop.get("total", "")
+                    row["population_male"] = pop.get("male", "")
+                    row["population_female"] = pop.get("female", "")
+                    row["households"] = pop_data.get("households", "")
+                else:
+                    row["population_total"] = ""
+                    row["population_male"] = ""
+                    row["population_female"] = ""
+                    row["households"] = ""
+
+            # Get finance data
+            if self.finance_parser:
+                finance_data = self.finance_parser.get_by_code(code)
+                if finance_data and finance_data.get("finance"):
+                    fin = finance_data["finance"]
+                    row["financial_capability_index"] = fin.get("financial_capability_index", "")
+                    row["current_balance_ratio"] = fin.get("current_balance_ratio", "")
+                    row["real_debt_service_ratio"] = fin.get("real_debt_service_ratio", "")
+                    row["future_burden_ratio"] = fin.get("future_burden_ratio", "")
+                    row["laspeyres_index"] = fin.get("laspeyres_index", "")
+                else:
+                    row["financial_capability_index"] = ""
+                    row["current_balance_ratio"] = ""
+                    row["real_debt_service_ratio"] = ""
+                    row["future_burden_ratio"] = ""
+                    row["laspeyres_index"] = ""
+
+            # Get MyNumber Card data
+            if self.mynumber_parser:
+                target_name = code_data.get("municipality")
+                target_prefecture = code_data.get("prefecture")
+                mynumber_data = self.mynumber_parser.get_by_name(target_name, target_prefecture)
+                if mynumber_data and mynumber_data.get("mynumber_card"):
+                    row["mynumber_card_issuance_rate"] = mynumber_data["mynumber_card"].get("issuance_rate", "")
+                else:
+                    row["mynumber_card_issuance_rate"] = ""
+            else:
+                row["mynumber_card_issuance_rate"] = ""
+
+            # Get age group data (demographic summary)
+            if self.age_group_parser:
+                age_data_list = self.age_group_parser.get_by_code(code)
+                if age_data_list and len(age_data_list) > 0:
+                    # Calculate demographic summary
+                    total_record = next((r for r in age_data_list if r["gender"] == "計"), None)
+                    if total_record:
+                        total_pop = total_record.get("total", 0)
+                        age_groups = total_record.get("age_groups", {})
+
+                        if total_pop and total_pop > 0:
+                            # Youth (0-14)
+                            youth = sum([
+                                age_groups.get("0-4歳", 0) or 0,
+                                age_groups.get("5-9歳", 0) or 0,
+                                age_groups.get("10-14歳", 0) or 0
+                            ])
+                            # Working age (15-64)
+                            working = sum([
+                                age_groups.get(f"{i}-{i+4}歳", 0) or 0
+                                for i in range(15, 65, 5)
+                            ])
+                            # Elderly (65+)
+                            elderly = sum([
+                                age_groups.get(f"{i}-{i+4}歳", 0) or 0
+                                for i in range(65, 100, 5)
+                            ]) + (age_groups.get("100歳以上", 0) or 0)
+
+                            row["youth_ratio"] = round(youth / total_pop * 100, 2)
+                            row["working_age_ratio"] = round(working / total_pop * 100, 2)
+                            row["elderly_ratio"] = round(elderly / total_pop * 100, 2)
+                        else:
+                            row["youth_ratio"] = ""
+                            row["working_age_ratio"] = ""
+                            row["elderly_ratio"] = ""
+                    else:
+                        row["youth_ratio"] = ""
+                        row["working_age_ratio"] = ""
+                        row["elderly_ratio"] = ""
+                else:
+                    row["youth_ratio"] = ""
+                    row["working_age_ratio"] = ""
+                    row["elderly_ratio"] = ""
+            else:
+                row["youth_ratio"] = ""
+                row["working_age_ratio"] = ""
+                row["elderly_ratio"] = ""
+
+            rows.append(row)
+
+        # Write to CSV
+        try:
+            with open(output_path, 'w', newline='', encoding='utf-8-sig') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=headers)
+                writer.writeheader()
+                writer.writerows(rows)
+
+            return {
+                "success": True,
+                "file_path": output_path,
+                "municipality_count": len(rows),
+                "columns": len(headers)
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
     def close(self):
         """Close all parsers"""
         if self.population_parser:

@@ -200,6 +200,29 @@ async def list_tools() -> list[Tool]:
                 },
             },
         ),
+        Tool(
+            name="export_all_municipalities_csv",
+            description=(
+                "Export all municipalities data to CSV file. "
+                "Includes: basic info, population, finance, MyNumber Card rate, demographic summary. "
+                "CSV columns: jichitai_code, jichitai_name, prefecture, jichitai_type, "
+                "population_total, population_male, population_female, households, "
+                "financial_capability_index, current_balance_ratio, real_debt_service_ratio, "
+                "future_burden_ratio, laspeyres_index, mynumber_card_issuance_rate, "
+                "youth_ratio, working_age_ratio, elderly_ratio. "
+                "Coverage: ~1,795 municipalities."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "output_path": {
+                        "type": "string",
+                        "description": "Path to save the CSV file (e.g., '/path/to/municipalities.csv')",
+                    },
+                },
+                "required": ["output_path"],
+            },
+        ),
     ]
 
 
@@ -324,6 +347,15 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 "jichitai_code": jichitai_code,
                 "jichitai_name": jichitai_name
             }, ensure_ascii=False))]
+
+    elif name == "export_all_municipalities_csv":
+        output_path = arguments.get("output_path")
+
+        result = data_manager.export_all_municipalities_to_csv(
+            output_path=output_path
+        )
+
+        return [TextContent(type="text", text=json.dumps(result, ensure_ascii=False, indent=2))]
 
     else:
         return [TextContent(type="text", text=f"Unknown tool: {name}")]
