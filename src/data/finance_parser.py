@@ -25,6 +25,9 @@ class FinanceParser:
         """
         Parse finance summary data from Excel file
 
+        Data source: 全市町村の主要財政指標（令和5年度）
+        Coverage: All municipalities (cities, towns, villages, special wards)
+
         Returns:
             List of dictionaries with finance data for each municipality
         """
@@ -34,20 +37,25 @@ class FinanceParser:
         ws = self.worksheet
         data = []
 
-        # Data starts at row 17, column 15 (O column)
+        # Data starts at row 3 (row 2 is header)
         # Key columns:
-        # 15(O): 団体コード
-        # 16(P): 団体名
-        # 17(Q): 住民基本台帳登載人口
-        # 27(AA): 標準財政規模
-        # 29(AC): 実質収支比率
-        # 30(AD): 経常収支比率
-        # 35(AI): 財政力指数
-        # 40(AN): 歳入総額
-        # 41(AO): 歳出総額
+        # 1: 団体コード
+        # 2: 都道府県名
+        # 3: 団体名
+        # 4: 財政力指数
+        # 5: 経常収支比率
+        # 6: 実質公債費比率
+        # 7: 将来負担比率
+        # 8: ラスパイレス指数
 
-        for row_idx in range(17, ws.max_row + 1):
-            jichitai_code = ws.cell(row_idx, 15).value
+        # Helper to convert "-" to None
+        def normalize_value(val):
+            if val == "-" or val == "－":
+                return None
+            return val
+
+        for row_idx in range(3, ws.max_row + 1):
+            jichitai_code = ws.cell(row_idx, 1).value
 
             # Skip if no code
             if not jichitai_code or not str(jichitai_code).strip():
@@ -57,32 +65,24 @@ class FinanceParser:
             if not str(jichitai_code).isdigit() or len(str(jichitai_code)) != 6:
                 continue
 
-            municipality_name = ws.cell(row_idx, 16).value
-            population = ws.cell(row_idx, 17).value
-            standard_fiscal_scale = ws.cell(row_idx, 27).value
-            real_balance_ratio = ws.cell(row_idx, 29).value
-            current_balance_ratio = ws.cell(row_idx, 30).value
-            financial_capability_index = ws.cell(row_idx, 35).value
-            revenue_total = ws.cell(row_idx, 40).value
-            expenditure_total = ws.cell(row_idx, 41).value
-
-            # Helper to convert "-" to None
-            def normalize_value(val):
-                if val == "-" or val == "－":
-                    return None
-                return val
+            prefecture_name = ws.cell(row_idx, 2).value
+            municipality_name = ws.cell(row_idx, 3).value
+            financial_capability_index = ws.cell(row_idx, 4).value
+            current_balance_ratio = ws.cell(row_idx, 5).value
+            real_debt_service_ratio = ws.cell(row_idx, 6).value
+            future_burden_ratio = ws.cell(row_idx, 7).value
+            laspeyres_index = ws.cell(row_idx, 8).value
 
             record = {
                 "jichitai_code": str(jichitai_code).zfill(6),
+                "prefecture_name": prefecture_name,
                 "municipality_name": municipality_name,
-                "population": population,
                 "finance": {
-                    "standard_fiscal_scale": normalize_value(standard_fiscal_scale),  # 標準財政規模 (千円)
-                    "real_balance_ratio": normalize_value(real_balance_ratio),  # 実質収支比率 (%)
-                    "current_balance_ratio": normalize_value(current_balance_ratio),  # 経常収支比率 (%)
                     "financial_capability_index": normalize_value(financial_capability_index),  # 財政力指数
-                    "revenue_total": normalize_value(revenue_total),  # 歳入総額 (千円)
-                    "expenditure_total": normalize_value(expenditure_total),  # 歳出総額 (千円)
+                    "current_balance_ratio": normalize_value(current_balance_ratio),  # 経常収支比率 (%)
+                    "real_debt_service_ratio": normalize_value(real_debt_service_ratio),  # 実質公債費比率 (%)
+                    "future_burden_ratio": normalize_value(future_burden_ratio),  # 将来負担比率 (%)
+                    "laspeyres_index": normalize_value(laspeyres_index),  # ラスパイレス指数
                 }
             }
 

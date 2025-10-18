@@ -37,8 +37,8 @@ class DataManager:
         if pop_file.exists():
             self.population_parser = PopulationParser(str(pop_file))
 
-        # Finance parser
-        finance_file = self.data_dir / "finance" / "r05_finance_summary.xlsx"
+        # Finance parser - all municipalities (cities, towns, villages, special wards)
+        finance_file = self.data_dir / "finance" / "000983094 (1).xlsx"
         if finance_file.exists():
             self.finance_parser = FinanceParser(str(finance_file))
 
@@ -127,7 +127,7 @@ class DataManager:
             finance_data = self.finance_parser.get_by_code(code)
             if finance_data:
                 result["finance"] = finance_data.get("finance")
-                result["data_sources"]["finance_source"] = "令和5年度市町村別決算状況調"
+                result["data_sources"]["finance_source"] = "令和5年度全市町村の主要財政指標"
 
         return result
 

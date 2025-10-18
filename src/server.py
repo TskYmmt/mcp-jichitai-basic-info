@@ -25,9 +25,8 @@ async def list_tools() -> list[Tool]:
             description=(
                 "Get basic information (population, finance, etc.) for a Japanese municipality by code or name. "
                 "Data sources: (1) Population: 総務省「住民基本台帳に基づく人口、人口動態及び世帯数」R6.1.1現在, 2,288自治体. "
-                "(2) Finance: 総務省「市町村別決算状況調」R5年度, 815市. "
-                "NOTE: Financial data is only available for cities (市). Towns (町) and villages (村) return null for finance field. "
-                "For Tokyo special wards (特別区), some financial indicators (標準財政規模, 財政力指数, 実質収支比率) are not calculated and return null."
+                "(2) Finance: 総務省「全市町村の主要財政指標」R5年度, 約1,736自治体（市、町、村、特別区を含む）. "
+                "Financial indicators: 財政力指数, 経常収支比率, 実質公債費比率, 将来負担比率, ラスパイレス指数."
             ),
             inputSchema={
                 "type": "object",
@@ -77,8 +76,8 @@ async def list_tools() -> list[Tool]:
             name="search_jichitai_by_criteria",
             description=(
                 "Search municipalities by various criteria (population, prefecture, type, financial capability). "
-                "Data sources: 総務省「住民基本台帳」R6.1.1, 「市町村別決算状況調」R5年度, 「全国地方公共団体コード」R6.1.1. "
-                "NOTE: Financial capability index is only available for cities (市), not towns (町) or villages (村)."
+                "Data sources: 総務省「住民基本台帳」R6.1.1, 「全市町村の主要財政指標」R5年度, 「全国地方公共団体コード」R6.1.1. "
+                "Financial capability index is available for all municipalities (cities, towns, villages, special wards)."
             ),
             inputSchema={
                 "type": "object",
