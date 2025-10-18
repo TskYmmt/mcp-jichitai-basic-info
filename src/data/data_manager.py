@@ -38,7 +38,7 @@ class DataManager:
             self.population_parser = PopulationParser(str(pop_file))
 
         # Finance parser - all municipalities (cities, towns, villages, special wards)
-        finance_file = self.data_dir / "finance" / "000983094 (1).xlsx"
+        finance_file = self.data_dir / "finance" / "r05_finance_all_municipalities.xlsx"
         if finance_file.exists():
             self.finance_parser = FinanceParser(str(finance_file))
 

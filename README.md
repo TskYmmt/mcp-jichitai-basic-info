@@ -392,7 +392,7 @@ data/source/
 │   ├── r06_municipal_population.xlsx
 │   └── age_group_population.xlsx
 ├── finance/
-│   └── 000983094 (1).xlsx
+│   └── r05_finance_all_municipalities.xlsx
 ├── codes/
 │   └── municipal_codes_2019.xlsx
 ├── mynumber/
@@ -423,9 +423,13 @@ data/source/
   - 9-11列: 世帯数、転入、出生等
 - カバレッジ: 2,288自治体（全市区町村）
 
-#### 2. 財政データ (`000983094 (1).xlsx`)
+#### 2. 財政データ (`r05_finance_all_municipalities.xlsx`)
 
 **出典:** 全市町村の主要財政指標（令和5年度）
+
+**ダウンロード元:** 総務省ホームページ
+- URL: https://www.soumu.go.jp/menu_seisaku/toukei/02zaisei07_04000131.html
+- ページタイトル: 令和5年度市町村決算状況調
 
 **データ構造:**
 - シート名: "全市町村の主要財政指標"
